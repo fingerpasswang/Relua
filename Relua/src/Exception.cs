@@ -40,4 +40,42 @@ namespace Relua {
 
         public ParserException(string msg) : base(msg) { }
     }
+
+    public class SyntaxErrorException : Exception
+    {
+        internal Token Token { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this exception was caused by premature stream termination (that is, unexpected EOF).
+        /// This can be used in REPL interfaces to tell between unrecoverable errors and those which can be recovered by extra input.
+        /// </summary>
+        public bool IsPrematureStreamTermination { get; set; }
+
+        internal SyntaxErrorException(Token t, string format, params object[] args)
+            : base(string.Format(format, args))
+        {
+            Token = t;
+        }
+
+        internal SyntaxErrorException(Token t, string message)
+            : base(message)
+        {
+            Token = t;
+        }
+    }
+
+    public class InternalErrorException : Exception
+    {
+        internal InternalErrorException(string message)
+            : base(message)
+        {
+
+        }
+
+        internal InternalErrorException(string format, params object[] args)
+            : base(string.Format(format, args))
+        {
+
+        }
+    }
 }

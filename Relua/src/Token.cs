@@ -5,7 +5,7 @@ namespace Relua {
         Identifier,
         QuotedString,
         Number,
-        Punctuation
+        Punctuation,
     }
 
     public struct Token {

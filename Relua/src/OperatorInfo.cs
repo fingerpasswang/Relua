@@ -37,6 +37,7 @@ namespace Relua {
 
         public static OperatorInfo? FromToken(Token tok) {
             if (tok.IsEOF()) return null;
+            if (tok.Type == TokenType.QuotedString) return null;
             if (LuaOperators.TryGetValue(tok.Value, out OperatorInfo op)) return op;
             return null;
         }

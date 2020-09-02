@@ -8,6 +8,35 @@ namespace Relua.AST {
     /// Base class of all Lua AST node.
     /// </summary>
     public abstract class Node {
+        public readonly int CurrentIndex = 0;
+
+        public readonly int CurrentLine = 1;
+        public readonly int CurrentColumn = 1;
+
+        public struct NodeLocation
+        {
+            public int CurrentIndex;
+            public int CurrentLine;
+            public int CurrentColumn;
+        }
+
+        protected Node(NodeLocation location)
+        {
+            this.CurrentIndex = location.CurrentIndex;
+            this.CurrentLine = location.CurrentLine;
+            this.CurrentColumn = location.CurrentColumn;
+        }
+
+        public NodeLocation GetLocation()
+        {
+            return new NodeLocation()
+            {
+                CurrentIndex = CurrentIndex,
+                CurrentLine = CurrentLine,
+                CurrentColumn = CurrentColumn
+            };
+        }
+
         public abstract void Write(IndentAwareTextWriter writer);
         public abstract void Accept(IVisitor visitor);
 
@@ -21,6 +50,9 @@ namespace Relua.AST {
             var iw = new IndentAwareTextWriter(sw);
             iw.ForceOneLine = one_line;
             Write(iw);
+
+            s.Append($"[{CurrentIndex}]{CurrentLine}:{CurrentColumn}");
+
             return s.ToString();
         }
     }
@@ -68,6 +100,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Variable(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -78,13 +115,17 @@ namespace Relua.AST {
     /// ```
     /// </summary>
     public class NilLiteral : Node, IExpression {
-        public static NilLiteral Instance = new NilLiteral();
 
         public override void Write(IndentAwareTextWriter writer) {
             writer.Write("nil");
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public NilLiteral(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -99,13 +140,17 @@ namespace Relua.AST {
     /// ```
     /// </summary>
     public class VarargsLiteral : Node, IExpression {
-        public static VarargsLiteral Instance = new VarargsLiteral();
 
         public override void Write(IndentAwareTextWriter writer) {
             writer.Write("...");
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public VarargsLiteral(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -117,15 +162,18 @@ namespace Relua.AST {
     /// ```
     /// </summary>
     public class BoolLiteral : Node, IExpression {
-        public static BoolLiteral TrueInstance = new BoolLiteral { Value = true };
-        public static BoolLiteral FalseInstance = new BoolLiteral { Value = false };
         public bool Value;
-
+        
         public override void Write(IndentAwareTextWriter writer) {
             writer.Write(Value ? "true" : "false");
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public BoolLiteral(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -146,9 +194,9 @@ namespace Relua.AST {
         public OpType Type;
         public IExpression Expression;
 
-        public UnaryOp() { }
-
-        public UnaryOp(OpType type, IExpression expr) {
+        public UnaryOp(OpType type, IExpression expr, NodeLocation location) 
+            : base(location)
+        {
             Type = type;
             Expression = expr;
         }
@@ -236,9 +284,9 @@ namespace Relua.AST {
             }
         }
 
-        public BinaryOp() { }
-
-        public BinaryOp(OpType type, IExpression left, IExpression right) {
+        public BinaryOp(OpType type, IExpression left, IExpression right, NodeLocation location)
+        :base(location)
+        {
             Type = type;
             Left = left;
             Right = right;
@@ -298,6 +346,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public StringLiteral(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -314,13 +367,22 @@ namespace Relua.AST {
         public bool HexFormat = false;
 
         public override void Write(IndentAwareTextWriter writer) {
-            if (HexFormat) {
-                writer.Write("0x");
-                writer.Write(((long)Value).ToString("X"));
-            } else writer.Write(Value);
+            //if (HexFormat) {
+            //    writer.Write("0x");
+            //    writer.Write(((long)Value).ToString("X"));
+            //}
+            //else
+            {
+                writer.Write(Value);
+            }
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public NumberLiteral(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -347,6 +409,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public LuaJITLongLiteral(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -420,6 +487,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public TableAccess(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -498,6 +570,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public FunctionCall(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -576,6 +653,11 @@ namespace Relua.AST {
             }
 
             public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+            public Entry(NodeLocation location) 
+                : base(location)
+            {
+            }
         }
 
         public List<Entry> Entries = new List<Entry>();
@@ -618,6 +700,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public TableConstructor(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -633,6 +720,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Break(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -657,6 +749,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Return(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -705,6 +802,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Block(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -728,6 +830,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public ConditionalBlock(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -765,6 +872,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public If(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -793,6 +905,58 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public While(NodeLocation location) 
+            : base(location)
+        {
+        }
+    }
+
+    /// <summary>
+    /// label statement
+    ///
+    /// ```
+    /// ::label::
+    /// 
+    /// ```
+    /// 
+    /// </summary>
+    public class Label : Node, IStatement
+    {
+        public string Name;
+
+        public override void Write(IndentAwareTextWriter writer)
+        {
+            writer.Write("::");
+            writer.Write(Name);
+            writer.Write("::");
+            writer.WriteLine();
+        }
+
+        public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Label(NodeLocation location) 
+            : base(location)
+        {
+        }
+    }
+
+    public class GoTo : Node, IStatement
+    {
+        public string GoToLabel;
+
+        public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public override void Write(IndentAwareTextWriter writer)
+        {
+            writer.Write("goto ");
+            writer.Write(GoToLabel);
+        }
+
+        public GoTo(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -820,6 +984,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Repeat(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -896,6 +1065,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public FunctionDefinition(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -1019,6 +1193,11 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public Assignment(NodeLocation location)
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -1026,6 +1205,11 @@ namespace Relua.AST {
     /// </summary>
     public abstract class For : Node, IStatement {
         public Block Block;
+
+        protected For(NodeLocation location) 
+            : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -1069,6 +1253,10 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public NumericFor(NodeLocation location) : base(location)
+        {
+        }
     }
 
     /// <summary>
@@ -1085,7 +1273,7 @@ namespace Relua.AST {
     /// </summary>
     public class GenericFor : For {
         public List<string> VariableNames = new List<string>();
-        public IExpression Iterator;
+        public List<IExpression> Iterator = new List<IExpression>();
 
         public override void Write(IndentAwareTextWriter writer) {
             writer.Write("for ");
@@ -1094,7 +1282,16 @@ namespace Relua.AST {
                 if (i < VariableNames.Count - 1) writer.Write(", ");
             }
             writer.Write(" in ");
-            Iterator.Write(writer);
+
+            for (int i = 0; i < Iterator.Count; i++)
+            {
+                Iterator[i].Write(writer);
+                if (i != Iterator.Count - 1)
+                {
+                    writer.Write(", ");
+                }
+            }
+
             writer.Write(" do");
             writer.IncreaseIndent();
             writer.WriteLine();
@@ -1105,5 +1302,9 @@ namespace Relua.AST {
         }
 
         public override void Accept(IVisitor visitor) => visitor.Visit(this);
+
+        public GenericFor(NodeLocation location) : base(location)
+        {
+        }
     }
 }
